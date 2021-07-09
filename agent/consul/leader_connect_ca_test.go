@@ -233,9 +233,6 @@ func initTestManager(t *testing.T, manager *CAManager, delegate *mockCAServerDel
 }
 
 func TestCAManager_Initialize(t *testing.T) {
-	if testing.Short() {
-		t.Skip("too slow for testing.Short")
-	}
 
 	conf := DefaultConfig()
 	conf.ConnectEnabled = true
@@ -278,9 +275,6 @@ func TestCAManager_Initialize(t *testing.T) {
 }
 
 func TestCAManager_UpdateConfigWhileRenewIntermediate(t *testing.T) {
-	if testing.Short() {
-		t.Skip("too slow for testing.Short")
-	}
 
 	// No parallel execution because we change globals
 	// Set the interval and drift buffer low for renewing the cert.
@@ -305,8 +299,10 @@ func TestCAManager_UpdateConfigWhileRenewIntermediate(t *testing.T) {
 	}
 	initTestManager(t, manager, delegate)
 
-	// Wait half the TTL for the cert to need renewing.
-	time.Sleep(500 * time.Millisecond)
+	// Simulate Wait half the TTL for the cert to need renewing.
+	manager.timeNow = func() time.Time {
+		return time.Now().Add(500 * time.Millisecond)
+	}
 
 	// Call RenewIntermediate and then confirm the RPCs and provider calls
 	// happen in the expected order.
@@ -414,8 +410,10 @@ func TestCAManager_SignLeafWithExpiredCert(t *testing.T) {
 			}
 			initTestManager(t, manager, delegate)
 
-			// Wait half the TTL for the cert to need renewing.
-			time.Sleep(1000 * time.Millisecond)
+			// Simulate Wait half the TTL for the cert to need renewing.
+			manager.timeNow = func() time.Time {
+				return time.Now().Add(500 * time.Millisecond)
+			}
 
 			// Call RenewIntermediate and then confirm the RPCs and provider calls
 			// happen in the expected order.
